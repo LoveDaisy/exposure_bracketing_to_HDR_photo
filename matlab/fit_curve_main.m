@@ -12,7 +12,7 @@ sample_num = 80;
 sample_h = 2;
 sample_pixel_store = nan(sample_num, 3, image_num);
 E_j = zeros(image_num, 1);
-param_store = zeros(3, 3);              % Each row for a channel [a, c, s]
+param_store = zeros(3, 3);              % Each row [a, c, s] for a single channel (R/G/B)
 lambda_store = zeros(sample_num, 3);    % Each column for a channel
 for i = 1:image_num
     fprintf('Reading image %s (%d/%d)...\n', image_list(i).name, i, length(image_list));
@@ -26,12 +26,13 @@ for i = 1:image_num
         pix_idx = randsample(prod(img_size(1:2)), sample_num);
     end
     
-    img = imfilter(img, ones(sample_h * 2 + 1) / (sample_h * 2 + 1)^2);
+    img = imfilter(img, ones(sample_h * 2 + 1) / (sample_h * 2 + 1)^2);     % Box filter
     img = reshape(img, [], 3);
     sample_pixel_store(:, :, i) = img(pix_idx, :);
 end
 clear i
 
+% Fit curve
 for ch = 1:3
     y_ij = reshape(sample_pixel_store(:, ch, :), sample_num, []);
     [param, lambda] = fit_trc_curve(y_ij, E_j);
@@ -93,5 +94,5 @@ clear data image_store img w1 w2 w h1 h2 h ch i
 
 %%
 figure(2); clf;
-imshow(exp(image_ev/2.2) * 0.02^(1/2.2));
+imshow(exp(image_ev/2.2) * 0.005^(1/2.2));
 drawnow;

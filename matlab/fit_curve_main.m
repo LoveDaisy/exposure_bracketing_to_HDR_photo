@@ -7,23 +7,60 @@ image_num = length(image_list);
 img_size = [];
 
 %%
-% Step 1. Estimate curve parameters
+% Step 1. Read exposure parameters.
+E_j = zeros(image_num, 1);
+fprintf('Read exposure settings...\n');
+for i = 1:image_num
+    img_name = sprintf('%s/%s', image_folder, image_list(i).name);
+    fprintf('  reading %s\n', img_name)
+    img_info = imfinfo(img_name);
+    E_j(i) = log2(img_info.DigitalCamera.ISOSpeedRatings * img_info.DigitalCamera.ApertureValue * ...
+        img_info.DigitalCamera.ExposureTime);
+end
+
+%%
+% Step 2. Register images (find transforms)
+[~, idx] = sort(E_j);
+reference_idx = idx(round((1 + length(idx)) / 2));
+fprintf('Register images to #%d\n', reference_idx);
+
+img_name = sprintf('%s/%s', image_folder, image_list(reference_idx).name);
+fprintf('  reading %s\n', img_name)
+img_ref = im2double(imread(img_name));
+tf_store = cell(image_num, 1);
+for i = 1:image_num
+    if i == reference_idx
+        tf_store{i} = [];
+        continue;
+    end
+    img_name = sprintf('%s/%s', image_folder, image_list(i).name);
+    fprintf('  reading %s\n', img_name)
+    img = im2double(imread(img_name));
+    
+    tf = find_transform(img_ref, img);
+    tf_store{i} = tf;
+end
+clear img_ref tf
+
+%%
+% Step 3. Estimate curve parameters
 sample_num = 80;
 sample_h = 2;
 sample_pixel_store = nan(sample_num, 3, image_num);
-E_j = zeros(image_num, 1);
 param_store = zeros(3, 3);              % Each row [a, c, s] for a single channel (R/G/B)
 lambda_store = zeros(sample_num, 3);    % Each column for a channel
 for i = 1:image_num
     fprintf('Reading image %s (%d/%d)...\n', image_list(i).name, i, length(image_list));
     img_name = sprintf('%s/%s', image_folder, image_list(i).name);
     img_info = imfinfo(img_name);
-    E_j(i) = log2(img_info.DigitalCamera.ISOSpeedRatings * img_info.DigitalCamera.ApertureValue * ...
-        img_info.DigitalCamera.ExposureTime);
     img = im2double(imread(img_name));
     if isempty(img_size)
         img_size = size(img);
         pix_idx = randsample(prod(img_size(1:2)), sample_num);
+    end
+    if ~isempty(tf_store{i})
+        output_view = imref2d(img_size(1:2));
+        img = imwarp(img, tf_store{i}, 'OutputView', output_view);
     end
     
     img = imfilter(img, ones(sample_h * 2 + 1) / (sample_h * 2 + 1)^2);     % Box filter
@@ -66,7 +103,7 @@ drawnow;
 clear tmp_* ch plot_offset
 
 %%
-% Step 2. Estimate all pixels
+% Step 4. Estimate all pixels
 image_ev = nan(img_size);
 
 for h = 1:ceil(img_size(1)/2):img_size(1)
@@ -77,6 +114,10 @@ for h = 1:ceil(img_size(1)/2):img_size(1)
         for i = 1:image_num
             fprintf('Reading image %s (%d/%d)...\n', image_list(i).name, i, length(image_list));
             img = im2double(imread(sprintf('%s/%s', image_folder, image_list(i).name)));
+            if ~isempty(tf_store{i})
+                output_view = imref2d(img_size(1:2));
+                img = imwarp(img, tf_store{i}, 'OutputView', output_view);
+            end
             img = img(h1:h2, w1:w2, :);
             image_store(:, :, :, i) = img;
         end
@@ -90,7 +131,20 @@ for h = 1:ceil(img_size(1)/2):img_size(1)
         end
     end
 end
-clear data image_store img w1 w2 w h1 h2 h ch i
+nan_idx = isnan(image_ev);
+if any(nan_idx(:))
+    img = im2double(imread(sprintf('%s/%s', image_folder, image_list(reference_idx).name)));
+    img = rgb2gray(img);
+    
+    img_black = nanmin(image_ev(:)) - 1;
+    img_white = nanmax(image_ev(:)) + 1;
+    
+    image_ev(nan_idx & img > 0.5) = img_white;
+    image_ev(nan_idx & img < 0.5) = img_black;
+    
+    clear img_black img_white
+end
+clear data image_store img w1 w2 w h1 h2 h ch i nan_idx
 
 %%
 figure(2); clf;

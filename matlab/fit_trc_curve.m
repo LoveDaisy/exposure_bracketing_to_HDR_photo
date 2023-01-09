@@ -9,11 +9,11 @@ function [param, lambda] = fit_trc_curve(y_ij, E_j)
 % OUTPUT
 %   param:          [a, c, s] param.
 
-param0 = [0.5, 1, 0.1];
+param0 = [0.5, 0.95, 0.0];
 % lambda0 = zeros(size(y_ij, 1), 1);
 data = y_ij;
 data(y_ij < 0.02 | y_ij > 0.98) = nan;
-lambda0 = nanmean(log(data) - E_j(:)', 2);
+lambda0 = nanmean(log2(data) - E_j(:)', 2);
 
 options = optimset('Display', 'off', 'MaxFunEvals', 10000);
 x = fminunc(@(x) err_func(y_ij, x, E_j, param0), lambda0, options);

@@ -1,1 +1,0 @@
-../Exposure Bracketing to HDR Photo.md

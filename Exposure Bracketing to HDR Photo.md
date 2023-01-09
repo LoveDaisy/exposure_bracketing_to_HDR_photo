@@ -8,13 +8,13 @@ tags: [[HDR]], [[color science]], [[math]], [[我的知乎专栏文章]]
 
 If we take exposure bracket images with a fixed step, then we get a set of images. The difference of EV (Exposure Value) on two adjacent images is a constant. If we pick up a pixel at the same location through all images, we will get a pixel sequence from dark to bright. Different pixel locations will result different sequences. Plot them on a EV-value chart as follows:
 
-![EV-value](Projects/Exposure%20Bracket%20and%20Characteristic%20Curve/img/sample_curve_iso100_R.png)
+![EV-value](img/sample_curve_iso100_R.png)
 
 The blue, red, yellow lines are different pixel sequences. Clearly, the pixel corresponding to the blue line is the brightest, and that of the yellow one is the darkest. The absolute value of x-axis is not important. They can be shifted arbitrary.
 
 These curves can be regarded as part of the total characteristic curve, shifting by different offsets along x axis. If we shift them back with right amout of offsets, they will form a single curve. It is shown on plot as follows:
 
-![curve_shift](Projects/Exposure%20Bracket%20and%20Characteristic%20Curve/img/sample_curve_iso100_R_merge.png)
+![curve_shift](img/sample_curve_iso100_R_merge.png)
 
 The offset needed to fit on the curve can be regarded as a kind of *real intensity* of this pixel up to an arbitrary scale. For example, we know that the blue line is the brightest pixel and yellow one is the darkest, as well it is the greatest offset (positive amount) the blue line need, and the smallest offset (negative amount) the yellow one need.
 
@@ -50,7 +50,7 @@ Clearly it is not a convex problem, which means we cannot guarantee global minim
 
 Here is a result. Curves are shifted vertically for clarity.
 
-![fit_curve](fit_rgb_curve.png)
+![fit_curve](img/fit_rgb_curve.png)
 
 ## Exposure offset
 

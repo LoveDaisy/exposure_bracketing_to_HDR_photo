@@ -1,7 +1,7 @@
 clear; close all; clc;
 
 image_folder = '../dataset';
-image_list = dir(sprintf('%s/*.JPG', image_folder));
+image_list = dir(sprintf('%s/*.jpg', image_folder));
 image_num = length(image_list);
 
 img_size = [];
@@ -11,9 +11,16 @@ img_size = [];
 sample_num = 80;
 sample_h = 2;
 sample_pixel_store = nan(sample_num, 3, image_num);
+E_j = zeros(image_num, 1);
+param_store = zeros(3, 3);              % Each row for a channel [a, c, s]
+lambda_store = zeros(sample_num, 3);    % Each column for a channel
 for i = 1:image_num
     fprintf('Reading image %s (%d/%d)...\n', image_list(i).name, i, length(image_list));
-    img = im2double(imread(sprintf('%s/%s', image_folder, image_list(i).name)));
+    img_name = sprintf('%s/%s', image_folder, image_list(i).name);
+    img_info = imfinfo(img_name);
+    E_j(i) = log2(img_info.DigitalCamera.ISOSpeedRatings * img_info.DigitalCamera.ApertureValue * ...
+        img_info.DigitalCamera.ExposureTime);
+    img = im2double(imread(img_name));
     if isempty(img_size)
         img_size = size(img);
         pix_idx = randsample(prod(img_size(1:2)), sample_num);
@@ -25,10 +32,6 @@ for i = 1:image_num
 end
 clear i
 
-%%
-E_j = (1:image_num) - ceil(image_num / 2);
-param_store = zeros(3, 3);              % Each row for a channel [a, c, s]
-lambda_store = zeros(sample_num, 3);    % Each column for a channel
 for ch = 1:3
     y_ij = reshape(sample_pixel_store(:, ch, :), sample_num, []);
     [param, lambda] = fit_trc_curve(y_ij, E_j);
@@ -90,5 +93,5 @@ clear data image_store img w1 w2 w h1 h2 h ch i
 
 %%
 figure(2); clf;
-imshow(exp(image_ev/2.2) * 0.2^(1/2.2));
+imshow(exp(image_ev/2.2) * 0.02^(1/2.2));
 drawnow;

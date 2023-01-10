@@ -8,15 +8,7 @@ img_size = [];
 
 %%
 % Step 1. Read exposure parameters.
-E_j = zeros(image_num, 1);
-fprintf('Read exposure settings...\n');
-for i = 1:image_num
-    img_name = sprintf('%s/%s', image_folder, image_list(i).name);
-    fprintf('  reading %s\n', img_name)
-    img_info = imfinfo(img_name);
-    E_j(i) = log2(img_info.DigitalCamera.ISOSpeedRatings * img_info.DigitalCamera.ApertureValue * ...
-        img_info.DigitalCamera.ExposureTime);
-end
+E_j = read_bracket_exposure(image_folder, image_list);
 
 %%
 % Step 2. Register images (find transforms)

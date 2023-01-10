@@ -6,15 +6,15 @@ image_num = length(image_list);
 
 %%
 % Step 1. Read exposure parameters.
-E_j = read_bracket_exposure(image_folder, image_list);
+ev_list = read_bracket_exposure(image_folder, image_list);
 
 %%
 % Step 2. Register images (find transforms)
-[tf_list, ref_idx] = register_images(image_folder, image_list, E_j);
+[tf_list, ref_idx] = register_images(image_folder, image_list, ev_list);
 
 %%
 % Step 3. Estimate curve parameters
-param_store = estimate_curve_param(image_folder, image_list, E_j, 'Transforms', tf_list);
+curve_param = estimate_curve_param(image_folder, image_list, ev_list, 'Transforms', tf_list);
 
 %%
 % Step 4. Estimate all pixels
@@ -40,9 +40,9 @@ for h = 1:ceil(img_size(1)/2):img_size(1)
         for ch = 1:3
             data = image_store(:, :, ch, :);
             data(data < 0.1 | data > 0.98) = nan;
-            data = inverse_trc_curve(data, param_store(ch, :));
+            data = inverse_trc_curve(data, curve_param(ch, :));
             data(isinf(data)) = nan;
-            data = data + reshape(E_j, [1, 1, 1, image_num]);
+            data = data + reshape(ev_list, [1, 1, 1, image_num]);
             image_ev(h1:h2, w1:w2, ch) = -nanmean(data, 4);
         end
     end

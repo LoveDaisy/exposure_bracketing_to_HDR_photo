@@ -6,7 +6,7 @@ function E_j = read_bracket_exposure(image_folder, image_list, varargin)
 %   E_j = read_bracket_exposure(..., Name, Value, ...)
 % INPUT
 %   image_folder:       A string
-%   image_list:         Array of file. Generally it is returned by `dir` function.
+%   image_list:         n-length struct array of file. Generally it is returned by `dir` function.
 % OPTION
 %   'Verbose':          Logical, default is true.
 % OUTPUT

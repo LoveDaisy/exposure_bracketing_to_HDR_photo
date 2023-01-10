@@ -12,27 +12,7 @@ E_j = read_bracket_exposure(image_folder, image_list);
 
 %%
 % Step 2. Register images (find transforms)
-[~, idx] = sort(E_j);
-reference_idx = idx(round((1 + length(idx)) / 2));
-fprintf('Register images to #%d\n', reference_idx);
-
-img_name = sprintf('%s/%s', image_folder, image_list(reference_idx).name);
-fprintf('  reading %s\n', img_name)
-img_ref = im2double(imread(img_name));
-tf_store = cell(image_num, 1);
-for i = 1:image_num
-    if i == reference_idx
-        tf_store{i} = [];
-        continue;
-    end
-    img_name = sprintf('%s/%s', image_folder, image_list(i).name);
-    fprintf('  reading %s\n', img_name)
-    img = im2double(imread(img_name));
-    
-    tf = find_transform(img_ref, img);
-    tf_store{i} = tf;
-end
-clear img_ref tf
+[tf_store, reference_idx] = register_images(image_folder, image_list, E_j);
 
 %%
 % Step 3. Estimate curve parameters

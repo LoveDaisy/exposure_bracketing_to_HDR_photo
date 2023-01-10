@@ -150,3 +150,14 @@ clear data image_store img w1 w2 w h1 h2 h ch i nan_idx
 figure(2); clf;
 imshow(exp(image_ev/2.2) * 0.005^(1/2.2));
 drawnow;
+
+%%
+% Linear image
+rgb_param = colorspace.get_param('DisplayP3', 'linear');
+yuv_param = colorspace.get_param('DisplayP3');
+lin_image = max(min(exp(image_ev) * 2, 1500), 0);
+non_lin_image = colorspace.pq_inverse_eotf(lin_image);
+yuv_image = colorspace.rgb2ycbcr(non_lin_image, rgb_param, yuv_param);
+
+colorutil.write_yuv_rawdata('test_4032x3024_yuv420p10le_pq.yuv', yuv_image, 10, 'tv', '420');
+% colorutil.write_yuv_rawdata('test_3024x4032_yuv420p10le_pq.yuv', yuv_image, 10, 'tv', '420');

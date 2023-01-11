@@ -2,7 +2,7 @@
 
 if [[ $# -eq 0 ]]; then
     echo "USAGE: $0 <filename>_<widxhei>_<pix-fmt>_<type>.yuv"
-    echo "<filename>: any string NOT containing underline character"
+    echo "<filename>: a string"
     echo "<widxhei>:  width and height, e.g. 1920x1080"
     echo "<pix-fmt>:  pixel format, e.g. yuv420p, yuv444p16le"
     echo "<type>:     hlg or pq or 709"
@@ -13,8 +13,9 @@ fi
 file=$1
 name=""
 
-if [[ "${file}" =~ ^([^_]+)_.*$ ]]; then
+if [[ "${file}" =~ ^(.+)_[0-9]+x[0-9]+_.*$ ]]; then
     name=${BASH_REMATCH[1]}
+    echo "Filename: ${name}"
 fi
 
 if [[ "${file}" =~ ^.*_([0-9]+)x([0-9]+)_(yuv4[0-9a-zA-Z]+)_([0-9a-zA-Z]+)\.yuv$ ]]; then

@@ -1,6 +1,6 @@
 clear; close all; clc;
 
-image_folder = '../dataset';
+image_folder = '../dataset/IMG_7313';
 image_list = dir(sprintf('%s/*.jpg', image_folder));
 
 %%
@@ -29,14 +29,20 @@ rgb_param = colorspace.get_param('DisplayP3', 'linear');
 yuv_param = colorspace.get_param('DisplayP3');
 
 % Get linear image
-lin_image = max(min(exp(image_ev) * 2, 1500), 0);
+lin_image = max(min(exp(image_ev * 0.92) * 2, 5000), 0);
+
+% Simply adjust white balance
+lin_image = lin_image .* reshape([0.96, 0.97, 1.04], [1, 1, 3]);
 
 % Convert to non-linear with PQ inverse EOTF
 non_lin_image = colorspace.pq_inverse_eotf(lin_image);
+figure(3);
+colorvis.parabe_diagram(non_lin_image);
 
 % Convert to YUV data
 yuv_image = colorspace.rgb2ycbcr(non_lin_image, rgb_param, yuv_param);
 
+%%
 % Save YUV data for encoding
 img_size = size(image_ev);
 img_name = image_list(1).name(1:end-4);

@@ -31,7 +31,12 @@ for i = 1:image_num
         fprintf('  reading %s\n', img_name)
     end
     img_info = imfinfo(img_name);
-    E_j(i) = log2(img_info.DigitalCamera.ISOSpeedRatings * img_info.DigitalCamera.ApertureValue * ...
+    curr_ev = log2(img_info.DigitalCamera.ISOSpeedRatings * img_info.DigitalCamera.ApertureValue * ...
         img_info.DigitalCamera.ExposureTime);
+    ev_bias = regexp(image_list(i).name, '([+-]?[0-9.]+)EV', 'tokens');
+    if ~isempty(ev_bias)
+        curr_ev = curr_ev + str2double(ev_bias{1}{1});
+    end
+    E_j(i) = curr_ev;
 end
 end

@@ -43,7 +43,10 @@ for i = 1:image_num
     img = im2double(imread(img_name));
     if isempty(img_size)
         img_size = size(img);
-        pix_idx = randsample(prod(img_size(1:2)), sample_num);
+        dx = floor(img_size(2) / 8);
+        dy = floor(img_size(1) / 10);
+        [xx, yy] = meshgrid(floor((1 + dx) / 2):dx:img_size(2), floor((1 + dy) / 2):dy:img_size(1));
+        pix_idx = sub2ind(img_size(1:2), yy(:), xx(:));
     end
     if ~isempty(p.Results.Transforms) && ~isempty(p.Results.Transforms{i})
         output_view = imref2d(img_size(1:2));

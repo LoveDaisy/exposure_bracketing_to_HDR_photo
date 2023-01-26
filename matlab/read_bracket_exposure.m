@@ -20,7 +20,7 @@ p.addParameter('Verbose', true, @(x)islogical(x) && isscalar(x));
 p.parse(image_folder, image_list, varargin{:});
 
 image_num = length(image_list);
-E_j = zeros(image_num, 1);
+E_j = zeros(image_num, 3);      % Final EV, original EV, bias
 
 if p.Results.Verbose
     fprintf('Read exposure settings...\n');
@@ -35,8 +35,10 @@ for i = 1:image_num
         img_info.DigitalCamera.ExposureTime);
     ev_bias = regexp(image_list(i).name, '([+-]?[0-9.]+)EV', 'tokens');
     if ~isempty(ev_bias)
-        curr_ev = curr_ev + str2double(ev_bias{1}{1});
+        ev_bias = str2double(ev_bias{1}{1});
+    else
+        ev_bias = 0;
     end
-    E_j(i) = curr_ev;
+    E_j(i, :) = [curr_ev + ev_bias, curr_ev, ev_bias];
 end
 end

@@ -11,6 +11,7 @@ function param_store = estimate_curve_param(image_folder, image_list, E_j, varar
 % OPTION
 %   'Verbose':          Logical, default is true.
 %   'DisplayCurve':     Logical, default is true.
+%   'ChannelShare':     Logical, default is true.
 %   'Transforms':       n*1 cell array of `tf` struct.
 % OUTPUT
 %   param_store:        3*3 array. Each row [a, c, s] for a single channel (R/G/B)
@@ -20,6 +21,7 @@ p.addRequired('image_folder', @(x)ischar(x));
 p.addRequired('image_list', @(x)isvector(x) && isfield(x, 'name'));
 p.addParameter('Verbose', true, @(x)islogical(x) && isscalar(x));
 p.addParameter('DisplayCurve', true, @(x)islogical(x) && isscalar(x));
+p.addParameter('ChannelShare', true, @(x)islogical(x) && isscalar(x));
 p.addParameter('Transforms', {}, @(x)isvector(x) && iscell(x));
 p.parse(image_folder, image_list, varargin{:});
 
@@ -60,11 +62,18 @@ end
 clear i
 
 % Fit curve
-for ch = 1:3
-    y_ij = reshape(sample_pixel_store(:, ch, :), sample_num, []);
+if p.Results.ChannelShare
+    y_ij = reshape(sample_pixel_store, [], image_num);
     [param, lambda] = fit_trc_curve(y_ij, E_j);
-    param_store(ch, :) = param;
-    lambda_store(:, ch) = lambda(:);
+    param_store = repmat(param', [3, 1]);
+    lambda_store = reshape(lambda, [], 3);
+else
+    for ch = 1:3
+        y_ij = reshape(sample_pixel_store(:, ch, :), sample_num, []);   % sample_num * image_num
+        [param, lambda] = fit_trc_curve(y_ij, E_j);
+        param_store(ch, :) = param;
+        lambda_store(:, ch) = lambda(:);
+    end
 end
 if p.Results.Verbose
     fprintf('Param of R: %.4f, %.4f, %.4f\n', param_store(1, 1), param_store(1, 2), param_store(1, 3));
@@ -109,7 +118,7 @@ function [param, lambda] = fit_trc_curve(y_ij, E_j)
 % OUTPUT
 %   param:          [a, c, s] param.
 
-param0 = [0.5, 1, 0.04];
+param0 = [0.55, 1, 0.05];
 data = y_ij;
 data(y_ij < 0.01 | y_ij > 1) = nan;
 lambda0 = nanmean(log2(data) - E_j(:)', 2);

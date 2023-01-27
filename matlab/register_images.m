@@ -7,7 +7,7 @@ function [tf_list, ref_idx] = register_images(image_folder, image_list, ev_list,
 % INPUT
 %   image_folder:       A string
 %   image_list:         n-length struct array of file. Generally it is returned by `dir` function.
-%   E_j:                n-length double. Exposure values of `image_list`.
+%   ev_list:            n*3 double. Exposure values of `image_list`.
 % OPTION
 %   'Verbose':          Logical, default is true.
 % OUTPUT
@@ -33,6 +33,8 @@ if p.Results.Verbose
     fprintf('  reading %s\n', img_name)
 end
 img_ref = im2double(imread(img_name));
+img_ref = rgb2gray(img_ref);
+
 tf_list = cell(image_num, 1);
 for i = 1:image_num
     if i == ref_idx
@@ -44,36 +46,37 @@ for i = 1:image_num
         fprintf('  reading %s\n', img_name)
     end
     img = im2double(imread(img_name));
+    img = rgb2gray(img);
     
-    tf = find_transform(img_ref, img);
+    tf = find_transform(img_ref, img, ev_list(i, 1) - ev_list(ref_idx, 1));
     tf_list{i} = tf;
 end
 end
 
 
-function tf = find_transform(ref_img, moving_img, varargin)
+function tf = find_transform(ref_img, moving_img, ev_offset, varargin)
 p = inputParser();
 p.addParameter('ShowMatch', false, @(x) islogical(x) && isscalar(x));
 p.parse(varargin{:});
 
 img_size = size(ref_img);
-ref_mask = ref_img < 0.95;
-moving_mask = moving_img < 0.95;
+ref_mask = ref_img < 0.95 & ref_img > 0.01;
+moving_mask = moving_img < 0.95 & moving_img > 0.01;
 
-ref_img = colorspace.rgb_ungamma(ref_img);
 moving_img = colorspace.rgb_ungamma(moving_img);
+moving_img = colorspace.rgb_gamma(moving_img / 2^(ev_offset));
 
-gaussian_detail_config = {'KernelSize', 0.003};
-ref_img = get_gaussian_detail(ref_img, gaussian_detail_config{:});
-moving_img = get_gaussian_detail(moving_img, gaussian_detail_config{:});
+gaussian_detail_config = {'KernelSize', 0.002};
+ref_img_detail = get_gaussian_detail(ref_img, gaussian_detail_config{:});
+moving_img_detail = get_gaussian_detail(moving_img, gaussian_detail_config{:});
 
 mt = 1000;
-pts_0  = detectSURFFeatures(ref_img, 'metricthreshold', mt);
+pts_0  = detectSURFFeatures(ref_img_detail, 'metricthreshold', mt);
 idx0 = max(floor(pts_0.Location), 1);
 idx0 = ref_mask(sub2ind(img_size, idx0(:, 2), idx0(:, 1)));
 pts_0 = pts_0(idx0);
 
-pts_1  = detectSURFFeatures(moving_img, 'metricthreshold', mt);
+pts_1  = detectSURFFeatures(moving_img_detail, 'metricthreshold', mt);
 idx1 = max(floor(pts_1.Location), 1);
 idx1 = moving_mask(sub2ind(img_size, idx1(:, 2), idx1(:, 1)));
 pts_1 = pts_1(idx1);
@@ -85,7 +88,7 @@ for i = 1:length(pts_num_list)
     [features_1,  valid_pts_1]  = extractFeatures(moving_img,  pts_1.selectStrongest(n));
 
     % Match base image and m3
-    idx = matchFeatures(features_0, features_1, 'MatchThreshold', 2);
+    idx = matchFeatures(features_0, features_1, 'MatchThreshold', 5);
     matched_pts_0  = valid_pts_0(idx(:, 1));
     matched_pts_1  = valid_pts_1(idx(:, 2));
 
@@ -93,11 +96,12 @@ for i = 1:length(pts_num_list)
         continue;
     end
     [tf, inlier1, inlier0] = estimateGeometricTransform(matched_pts_1, matched_pts_0, 'similarity');
-    if length(inlier1) > 10
+    if length(inlier1) > 6
         break;
     end
 end
-if ~exist('tf', 'var') || length(inlier1) < 10
+if ~exist('tf', 'var') || length(inlier1) < 6
+    warning('Cannot find proper transform. Set to empty!');
     tf = [];
     return;
 end

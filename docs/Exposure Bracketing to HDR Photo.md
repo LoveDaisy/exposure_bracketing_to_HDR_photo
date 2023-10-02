@@ -6,21 +6,21 @@ tags: [[HDR]], [[color science]], [[math]], [[我的知乎专栏文章]]
 
 ## Exposure bracket
 
-If we take exposure bracket images with a fixed step, then we get a set of images. The difference of EV (Exposure Value) on two adjacent images is a constant. If we pick up a pixel at the same location through all images, we will get a pixel sequence from dark to bright. Different pixel locations will result different sequences. Plot them on a EV-value chart as follows:
+If we take exposure bracket images, we get a set of images. The lightness of an image is described by EV (Exposure Value), which is related to the shutter speed, the aperture, and the ISO. If we pick up a pixel at the same location of an image through the bracket, we will get a pixel sequence from dark to bright. Different pixel locations will result different sequences. Plot them on a EV vs. pixle value chart as follows:
 
 ![EV-value](img/sample_curve_iso100_R.png)
 
-The blue, red, yellow lines are different pixel sequences. Clearly, the pixel corresponding to the blue line is the brightest, and that of the yellow one is the darkest. The absolute value of x-axis is not important. They can be shifted arbitrary.
+The blue, red, yellow curves are different pixel sequences. Clearly, the pixel corresponding to the blue curve is the brightest, and that of the yellow one is the darkest. The absolute value of x-axis is not important. They can be shifted arbitrary.
 
-These curves can be regarded as part of the total characteristic curve, shifting by different offsets along x axis. If we shift them back with right amout of offsets, they will form a single curve. It is shown on plot as follows:
+These curves can be regarded as part of the response characteristic curve of the camera, shifting by different offsets along x axis. If we shift them back with right amout of offsets, they will meet each other and form a single curve. It is shown as follows:
 
 ![curve_shift](img/sample_curve_iso100_R_merge.png)
 
-The offset needed to fit on the curve can be regarded as a kind of *real intensity* of this pixel up to an arbitrary scale. For example, we know that the blue line is the brightest pixel and yellow one is the darkest, as well it is the greatest offset (positive amount) the blue line need, and the smallest offset (negative amount) the yellow one need.
+The offset of a single curve segment that is needed to fit on the total curve can be regarded as a kind of *real intensity* of this pixel up to an arbitrary scale. For example, we know that the blue curve corresponds to the brightest pixel and yellow one corresponds to the darkest, as well it is the greatest offset (is positive here) the blue line need, and the smallest offset (is negative here) the yellow one need.
 
 ## Curve function
 
-Our target is to find offsets for each pixel, so that they can meet each other on a smooth curve. What kind of curve do we need? It is quite random, as long as the curve is smooth and can describe the correct shape. Even so, I would like to start from some basic information of camera ISP pipeline. A point with real intensity $I$, will result a sensor value $x$ which is proportion to $I$, i.e. $x = k I$. We ignore the color correction phase that camera ISP will do. Then camera make a non-linear transform, which is often called gamma. It is often modeled as $y = x^\gamma$, where $y$ is the pixel value and $x$ is the sensor value.
+Our target is to find offsets for each pixel, so that they can meet each other on a smooth curve. What kind of curve do we need? It is quite random, as long as the curve is smooth and can describe the correct shape. Even so, I would like to start from some basic information of camera ISP pipeline. The modern CMOS sensor is quite linear. A point with real intensity $I$, will result a sensor value $x$ which is proportion to $I$, i.e. $x = k I$. We ignore the color correction phase that camera ISP will do. Then camera make a non-linear transform, which is often called gamma. It is often modeled as $y = x^\gamma$, where $y$ is the pixel value and $x$ is the sensor value.
 
 So, I start from a function $f$ as follows:
 

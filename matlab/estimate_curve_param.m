@@ -45,8 +45,8 @@ for i = 1:image_num
     img = im2double(imread(img_name));
     if isempty(img_size)
         img_size = size(img);
-        dx = floor(img_size(2) / 8);
-        dy = floor(img_size(1) / 10);
+        dx = floor(img_size(2) / 10);
+        dy = floor(img_size(1) / 8);
         [xx, yy] = meshgrid(floor((1 + dx) / 2):dx:img_size(2), floor((1 + dy) / 2):dy:img_size(1));
         pix_idx = sub2ind(img_size(1:2), yy(:), xx(:));
     end
@@ -121,7 +121,7 @@ function [param, lambda] = fit_trc_curve(y_ij, E_j)
 param0 = [0.55, 1, 0.05];
 data = y_ij;
 data(y_ij < 0.01 | y_ij > 1) = nan;
-lambda0 = nanmean(log2(data) - E_j(:)', 2);
+lambda0 = mean(log2(data) - E_j(:)', 2, 'omitnan');
 
 options = optimset('Display', 'off', 'MaxFunEvals', 10000);
 x = fminunc(@(x) err_func(y_ij, x, E_j, param0), lambda0, options);
